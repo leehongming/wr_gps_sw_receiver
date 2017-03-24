@@ -13,6 +13,8 @@
 5. Correlation / Uncorrelation integration
 6. PLL
 
+# software modules
+1. C/A code generator 
 
 
 

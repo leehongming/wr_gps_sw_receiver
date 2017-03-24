@@ -89,8 +89,8 @@ class BitSet(object):
     def test(self, pos):  
         # test whether the position "pos" is 1
         if self.get(pos):  
-            return True  
-        return False   
+            return 1  
+        return 0   
    
     def set(self, pos=-1):  
         # Set the position "pos" to bit 1

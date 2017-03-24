@@ -5,7 +5,7 @@ from ObsID import *
 from SatID import *
 
 class CodeGenerator(object):
-    """docstring for ConstLinearRecurrentSequence"""
+    """docstring for CodeGenerator"""
 
     def __init__(self,track_code,sv):
         self.track_code = track_code
