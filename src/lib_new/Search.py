@@ -11,9 +11,8 @@ import InputIQ
 
 class Search(object):
     """docstring for Search"""
-    def __init__(self, prn):
+    def __init__(self, prn, InputIQ):
         super(Search, self).__init__()
-        
         self.adc_sample_freq = 15.625e6 
         self.ca_code_freq = 1.023e6
         self.inter_freq = 4.1309375e6
@@ -27,12 +26,12 @@ class Search(object):
         self.bins = (20000 // 200 + 1)    
         self.prn = prn
         self.search_snr = 10
+        self.IQ_input = InputIQ
 
     def process(self):
         pyfftw.interfaces.cache.enable()
         # Get input code
-        IQ_input = InputIQ.InputIQ("../gps_adc.txt")
-        input_td = numpy.array(IQ_input.read(self.num_samples))
+        input_td = numpy.array(self.IQ_input.read(self.num_samples))
 
         # Convert input code to frequency domain.
         # Consider to share these results to all prns
@@ -114,7 +113,7 @@ class Search(object):
                 peak_shift = multi_td_abs.argmax()
                 multi_plot = multi_td_abs
             
-            print(f,snr)
+            # print(f,snr)
             f += self.freqBinWidth        
 
         peak_shift = peak_shift % (self.adc_sample_freq*1e-3)
@@ -127,8 +126,9 @@ class Search(object):
             return True, snr_max, dop_freq, peak_shift
 
 def main():
-    acquire = Search(3)
-    acquire.process()
+    IQ_input = InputIQ.InputIQ("../gps_adc.txt")
+    acquire = Search(3,IQ_input)
+    find, snr_max, dop_freq, peak_shift = acquire.process()
 
 if __name__ == '__main__':
     main()

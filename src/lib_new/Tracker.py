@@ -14,7 +14,7 @@ import ShiftReg
 
 class Tracker(object):
     """docstring for Tracker"""
-    def __init__(self, prn,dop_freq):
+    def __init__(self, prn, dop_freq, InputIQ):
         super(Tracker, self).__init__()
         self.adc_sample_freq = 15.625e6 
         self.ca_code_freq = 1.023e6
@@ -32,7 +32,7 @@ class Tracker(object):
         self.code_nco = NCO.NCO(self.code_nco_len,0,self.adc_sample_freq,self.ca_code_freq*2)
         self.carrier_nco_len = 4
         self.carrier_nco = NCO.NCO(self.carrier_nco_len,0,self.adc_sample_freq,self.inter_freq+dop_freq)
-        self.IQ_input = InputIQ.InputIQ("../gps_adc.txt")
+        self.IQ_input = InputIQ
         self.shift_reg = ShiftReg.ShiftReg(
                         self.code_gen.getCode(self.code_index),
                         self.code_gen.getCode(self.code_index-1),
@@ -48,9 +48,9 @@ class Tracker(object):
         self.mag_Early = 0.0
         self.mag_Late = 0.0
         self.dll_update = 0
-        self.a=[]
-        self.b=[]
-        self.c=[]
+        # self.a=[]
+        # self.b=[]
+        # self.c=[]
 
     def process(self):
         # Get input code
@@ -114,16 +114,17 @@ class Tracker(object):
         #     print(self.pll_error,self.carrier_incr)
         # self.a.append(abs(sum_Prompt.imag))
         # self.b.append(abs(sum_Prompt.real)) 
-        print(self.dll_error,self.pll_error)
+        # print(self.dll_error,self.pll_error)
         # self.a.append(self.dll_error)
         # self.c.append(self.pll_error)
-        self.a.append(self.mag_Early)
-        self.b.append(mag_Prompt)
-        self.c.append(self.mag_Late)
+        # self.a.append(self.mag_Early)
+        # self.b.append(mag_Prompt)
+        # self.c.append(self.mag_Late)
 
         if abs(self.pll_error) < 0.25 and abs(self.dll_error) < 0.3:
             return 1 if sum_Prompt.real>0 else -1
         else:
+            print("Unlock!\n")
             return 0
 
     def carrier_loop_filter(self):
@@ -150,19 +151,20 @@ class Tracker(object):
 def main():
     fp_data = open("data.txt","w+")
     data=[]
-    a = Tracker(3,5400)
+    IQ_input = InputIQ.InputIQ("../gps_adc.txt")
+    a = Tracker(3,5400,IQ_input)
     a.IQ_input.read(6115)
     for i in range(7000):
         bit = a.process()
         data.append(bit)
         fp_data.write(str(bit)+"\n")
-    plt.subplot(3,1,1)
-    plt.plot(a.a)
-    plt.subplot(3,1,2)
-    plt.plot(a.b)
-    plt.subplot(3,1,3)
-    plt.plot(a.c)
-    plt.show()
+    # plt.subplot(3,1,1)
+    # plt.plot(a.a)
+    # plt.subplot(3,1,2)
+    # plt.plot(a.b)
+    # plt.subplot(3,1,3)
+    # plt.plot(a.c)
+    # plt.show()
 
 if __name__ == '__main__':
     main()
