@@ -37,7 +37,7 @@ class Search(object):
         pyfftw.interfaces.cache.enable()
 
         # Get input code
-        IQ_input = InputIQ.InputIQ("gps_adc.txt")
+        IQ_input = InputIQ.InputIQ("../gps_adc.txt")
         input_td = numpy.array(IQ_input.read(self.num_samples))
 
         # Convert input code to frequency domain.
@@ -58,10 +58,9 @@ class Search(object):
         PrnCACodeGen = CACodeGenerator.CACodeGenerator(self.prn)
         PrnCC_td = pyfftw.empty_aligned(self.numSamples, dtype='complex128')
         PrnCC_fd  = pyfftw.empty_aligned(self.numSamples, dtype='complex128')
-        # f = -self.freqSearchWidth / 2
-        f=4890
+        f = -self.freqSearchWidth / 2
         multi_plot=[]
-        for i in range(self.bins//4):
+        for i in range(self.bins):
             PrnCCGen = CCReplica.CCReplica(self.adc_sample_freq,self.chip_freq,
                           self.inter_freq+f,PrnCACodeGen)
             PrnCCGen.reset(0)
@@ -89,7 +88,7 @@ class Search(object):
                 peak_shift = multi_td_abs.argmax()
                 multi_plot = multi_td_abs
             print(f,peak)
-            f += self.freqBinWidth/200
+            f += self.freqBinWidth
 
         plt.plot(multi_plot)
         plt.show()
