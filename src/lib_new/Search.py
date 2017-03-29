@@ -113,7 +113,7 @@ class Search(object):
                 peak_shift = multi_td_abs.argmax()
                 multi_plot = multi_td_abs
             
-            # print(f,snr)
+            print(f,snr)
             f += self.freqBinWidth        
 
         peak_shift = peak_shift % (self.adc_sample_freq*1e-3)

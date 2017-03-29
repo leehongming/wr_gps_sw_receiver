@@ -62,8 +62,9 @@ class Main(object):
 
 def main():
     IQ_input = InputIQ.InputIQ("../gps_adc.txt")
-    start = Main(IQ_input,3)
-    start.process()
+    for i in range(20,26):
+        start = Main(IQ_input,i)
+        start.process()
 
 if __name__ == '__main__':
     main()
