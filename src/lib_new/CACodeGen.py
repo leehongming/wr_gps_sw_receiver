@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-import MSequence 
+import lib_new.MSequence as MSequence
 import numpy
 import matplotlib.pyplot as plt
 

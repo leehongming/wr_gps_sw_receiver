@@ -3,7 +3,7 @@
 import math
 import matplotlib.pyplot as plt
 import numpy
-import BitSync
+import lib_new.BitSync as BitSync
 
 class FrameSync(object):
     """docstring for FrameSync"""

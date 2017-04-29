@@ -147,16 +147,17 @@ class Tracker(object):
             return 0
 
     def carrier_loop_filter(self):
-        # Two order low pass filter, BL= 15Hz, page 273
+        # Two order low pass filter, BL= 10Hz, page 273
         a2 = 1.414
-        wn = 28.3
-        K = 2000 / 1.5
+        wn = 18.3
+        K = 2000
         if self.init==0:
             self.init+=1
         else:
             self.carrier_incr = self.carrier_incr_prev + \
                 round ((a2*wn+(wn**2)/2/1e3)*self.pll_error*K  + \
                 (-a2*wn+(wn**2)/2/1e3)*self.pll_error_prev*K )
+        print(self.pll_error,self.carrier_incr,self.carrier_incr_prev)
         self.carrier_incr_prev = self.carrier_incr
         self.pll_error_prev = self.pll_error
 
@@ -164,7 +165,7 @@ class Tracker(object):
 
     def code_loop_filter(self):
         wn = 1.89
-        K = 19043 * 0.8
+        K = 19043 * 20 * 0.8
         self.code_incr = self.dll_error * wn * K
         return 
 
@@ -174,24 +175,17 @@ def main():
     IQ_input = InputIQ.InputIQ("../gps_adc.txt")
     a = Tracker(3,5400,IQ_input)
     a.IQ_input.read(6115)
-    try:
-        for i in range(20000):
-            bit = a.process()
-            data.append(bit)
-            print(i)
-            # fp_data.write(str(bit)+"\n")
-    finally:
-        print(max(a.c[4:]),min(a.c[4:]))
-        fp_data.write(str(a.c))
-        plt.subplot(3,1,1)
-        plt.plot(a.a)
-        plt.subplot(3,1,2)
-        plt.plot(a.b)
-        plt.subplot(3,1,3)
-        plt.plot(a.c)
-        plt.figure()
-        plt.hist(a.c[4:])
-        plt.show()
+    for i in range(500):
+        bit = a.process()
+        data.append(bit)
+        fp_data.write(str(bit)+"\n")
+    plt.subplot(3,1,1)
+    plt.plot(a.a[4:])
+    plt.subplot(3,1,2)
+    plt.plot(a.b[4:])
+    plt.subplot(3,1,3)
+    plt.plot(a.c[4:])
+    plt.show()
 
 if __name__ == '__main__':
     main()

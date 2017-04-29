@@ -139,6 +139,8 @@ class Tracker(object):
 
         self.mag_Early = 0
         self.mag_Late = 0
+        
+        # print(self.pll_error)
 
         if abs(self.pll_error) < 0.25 and abs(self.dll_error) < 0.3:
             return 1 if sum_Prompt.real>0 else -1
@@ -171,26 +173,27 @@ class Tracker(object):
 def main():
     fp_data = open("data.txt","w+")
     data=[]
-    IQ_input = InputIQ.InputIQ("../gps_adc.txt")
-    a = Tracker(3,5400,IQ_input)
-    a.IQ_input.read(6115)
+    # IQ_input = InputIQ.InputIQ("data/gps_adc_192.168.0.4")
+    IQ_input = InputIQ.InputIQ("../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.4")
+    a = Tracker(5,7400,IQ_input)
+    a.IQ_input.read(12278)
     try:
         for i in range(20000):
             bit = a.process()
             data.append(bit)
-            print(i)
+            # print(i,)
             # fp_data.write(str(bit)+"\n")
     finally:
-        print(max(a.c[4:]),min(a.c[4:]))
+        print(max(a.c[30:]),min(a.c[30:]))
         fp_data.write(str(a.c))
         plt.subplot(3,1,1)
-        plt.plot(a.a)
+        plt.plot(a.a[30:])
         plt.subplot(3,1,2)
-        plt.plot(a.b)
+        plt.plot(a.b[30:])
         plt.subplot(3,1,3)
-        plt.plot(a.c)
+        plt.plot(a.c[30:])
         plt.figure()
-        plt.hist(a.c[4:])
+        plt.hist(a.c[30:])
         plt.show()
 
 if __name__ == '__main__':

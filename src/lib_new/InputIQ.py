@@ -18,12 +18,28 @@ class InputIQ(object):
         super(InputIQ, self).__init__()
         self.file = open(filename,"rb")
         self.loc = 0
+        self.ns_time = 0
+        self.s_time = 0
 
     def read(self,size):
         LIST=[]
-        self.loc += size
         for i in range(size):
+            if self.loc%1044 == 0:
+                ip = self.file.read(2)
+                tai = self.file.read(10)
+                cycles = self.file.read(7)
+                self.file.read(1)
+                self.loc +=20
+                tmp_ns = int(cycles,16)*8
+                tmp_s = int(tai,16)
+                period = (tmp_s-self.s_time)*1e9 + (tmp_ns - self.ns_time)
+                self.ns_time = tmp_ns
+                self.s_time = tmp_s
+                if period!=65536:
+                    print(period,)
+            
             QI = self.file.read(1)
+            self.loc += 1
             # if QI == "":
                 # return -1
             Q_BIN=bin((int(QI,16)&0b1100)>>2)
@@ -39,11 +55,10 @@ class InputIQ(object):
         self.file.close()
 
 def main():
-    IQ_input = InputIQ("../gps_adc.txt")
-    print(IQ_input.read(10))
-    print(IQ_input.reset())
-    print(IQ_input.read(10))
-    print(IQ_input.read(10))
+    IQ_input = InputIQ("../data/gps_adc_192.168.0.2")
+    IQ_input.read(254000)
+    IQ_input.reset()
+    IQ_input.read(254000)
 
 if __name__ == '__main__':
     main()

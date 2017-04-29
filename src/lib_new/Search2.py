@@ -5,9 +5,9 @@ import math
 import numpy
 import matplotlib.pyplot as plt
 import datetime
-import CACodeGen
-import NCO
-import InputIQ
+import lib_new.CACodeGen as CACodeGen
+import lib_new.NCO as NCO
+import lib_new.InputIQ as InputIQ
 
 class Search(object):
     """docstring for Search"""
@@ -82,7 +82,7 @@ class Search(object):
             carrier_nco_len = 4
             carrier_nco = NCO.NCO(carrier_nco_len,0,self.adc_sample_freq,self.inter_freq+f)
             for i in range(self.num_samples):
-                carrier_sin, carrier_cos = carrier_nco.getPhase()
+                carrier_sin, carrier_cos = carrier_nco.getSinCos()
                 carrier = complex(carrier_cos,carrier_sin)
                 local_td[i] = carrier * code_td[i]
                 carrier_nco.tick()

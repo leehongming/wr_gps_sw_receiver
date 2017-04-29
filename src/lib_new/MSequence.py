@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*- 
 
-import BitSet
+import lib_new.BitSet as BitSet
 import numpy as np
 
 class MSequence(BitSet.BitSet):

@@ -1,3 +1,4 @@
 *.pyc
 gps_adc.txt
 __pycache__/
+gps_adc*

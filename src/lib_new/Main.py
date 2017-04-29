@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*- 
 #!/usr/bin/python3
-import InputIQ
-import Search
-import Tracker
-import BitSync
-import FrameSync
+import lib_new.InputIQ as InputIQ
+import lib_new.Search as Search
+import lib_new.Tracker as Tracker
+import lib_new.BitSync as BitSync
+import lib_new.FrameSync as FrameSync
 
 class Main(object):
     """docstring for Main"""
@@ -62,7 +62,7 @@ class Main(object):
 
 def main():
     IQ_input = InputIQ.InputIQ("../gps_adc.txt")
-    for i in range(20,26):
+    for i in range(3,26):
         start = Main(IQ_input,i)
         start.process()
 

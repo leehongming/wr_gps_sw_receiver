@@ -11,12 +11,16 @@ class NCO(object):
         super(NCO, self).__init__()
         self.reg_max = 2 ** reg_len
         self.reg = reg_init
-        self.phase_incr_center = 2 ** reg_len * nco_freq / clock_freq
+        self.phase_incr_center = round(nco_freq / clock_freq * (2 ** reg_len))
         self.phase_incr = self.phase_incr_center
+        
+    def getSinCos(self):
+        phase = 2 * math.pi * self.reg / self.reg_max
+        return (math.sin(phase), math.cos(phase))
 
     def getPhase(self):
         phase = 2 * math.pi * self.reg / self.reg_max
-        return (math.sin(phase), math.cos(phase))
+        return phase
 
     def tick(self):
         self.reg += self.phase_incr
@@ -37,7 +41,7 @@ def main():
     a.ModifyPhaseIncr(0)
 
     for i in range(1000):
-        sin, cos = a.getPhase()
+        sin, cos = a.getSinCos()
         a.tick()
         sin_list.append(sin)
         cos_list.append(cos)
