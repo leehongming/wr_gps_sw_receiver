@@ -9,20 +9,20 @@ import lib_new.CACodeGen as CACodeGen
 import lib_new.NCO as NCO
 import lib_new.InputIQ as InputIQ
 
-class Search(object):
+class NewSearch(object):
     """docstring for Search"""
     def __init__(self, prn, InputIQ):
-        super(Search, self).__init__()
+        super(NewSearch, self).__init__()
         self.adc_sample_freq = 15.625e6 
         self.ca_code_freq = 1.023e6
         self.inter_freq = 4.1309375e6
         # odd values recommended because of possible NAV change.
         self.sample_period = 1e-3 # 1ms
         # the period of C/A code is 1ms
-        self.num_samples = int(self.adc_sample_freq * self.sample_period)
+        self.num_samples = 10*int(self.adc_sample_freq * self.sample_period)
         # page 356, the maximum Doppler frequency offset is +-10kHz
         self.freqSearchWidth = 20000
-        self.freqBinWidth = 200
+        self.freqBinWidth = 50
         self.bins = (self.freqSearchWidth // self.freqBinWidth + 1)    
         self.prn = prn
         self.search_snr = 6.5
@@ -31,7 +31,7 @@ class Search(object):
     def process(self):
         pyfftw.interfaces.cache.enable()
         # Get input code
-        input_td = numpy.array(self.IQ_input.read(self.num_samples))
+        input_td, input_time = numpy.array(self.IQ_input.read(self.num_samples))
         # Convert input code to frequency domain.
         # Consider to share these results to all prns
         # input_td = pyfftw.empty_aligned(self.num_samples, dtype='complex128')
@@ -118,17 +118,17 @@ class Search(object):
         peak_shift = peak_shift % (self.adc_sample_freq*1e-3)
         # print(peak,dop_freq,peak_shift)
         if snr_max <= self.search_snr:
-            print("Prn:%d Unable to acquire.SNR:%f "%(self.prn,snr_max))
+            print("Prn:%d Unable to acquire.SNR:%f"%(self.prn,snr_max))
             return False, 0, 0, 0
         else:
             print("Prn:%d - SNR:%f - Doppler:%f - Shift:%d"%(self.prn,snr_max,dop_freq,peak_shift))
             return True, snr_max, dop_freq, peak_shift
 
 def main():
-    IQ_input = InputIQ.InputIQ("../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.4")
-    # IQ_input = InputIQ.InputIQ("../data/gps_adc_192.168.0.4")
-    for i in range(4,33):
-        acquire = Search(i,IQ_input)
+    # IQ_input = InputIQ.InputIQ("../../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.4")
+    IQ_input = InputIQ.InputIQ("../gps_adc.txt")
+    for i in range(3,33):
+        acquire = NewSearch(i,IQ_input)
         find, snr_max, dop_freq, peak_shift = acquire.process()
 
 if __name__ == '__main__':

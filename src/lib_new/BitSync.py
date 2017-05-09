@@ -21,11 +21,12 @@ class BitSync(object):
         if self.bit_count == self.bit_len:
             self.bit_count = 0
             bit_sum = sum(self.bit_reg)
-            if bit_sum > self.bit_len-2:
+            if bit_sum > self.bit_len-1:
                 bit_o = 1
-            elif bit_sum < -self.bit_len+2:
+            elif bit_sum < -self.bit_len+1:
                 bit_o = -1
             else:
+                print("bit error!\n")
                 bit_o = 0
         else:            
             bit_o = 0
@@ -33,7 +34,6 @@ class BitSync(object):
                 self.bit_count = 1
 
         self.bit_prev = bit
-        
 
         if bit_o == 0:
             return None

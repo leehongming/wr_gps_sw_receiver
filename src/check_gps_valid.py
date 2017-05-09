@@ -31,7 +31,7 @@ class Search(object):
     def process(self):
         pyfftw.interfaces.cache.enable()
         # Get input code
-        input_td = numpy.array(self.IQ_input.read(self.num_samples))
+        input_td,input_time = numpy.array(self.IQ_input.read(self.num_samples))
         # Convert input code to frequency domain.
         # Consider to share these results to all prns
         # input_td = pyfftw.empty_aligned(self.num_samples, dtype='complex128')
@@ -125,8 +125,9 @@ class Search(object):
             return True, snr_max, dop_freq, peak_shift
 
 def main():
-    IQ_input = InputIQ.InputIQ("../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.2")
-    # IQ_input = InputIQ.InputIQ("../data/gps_adc_192.168.0.4")
+    ip = "192.168.0.2"
+    test_num = "test0"
+    IQ_input = InputIQ.InputIQ("../../raw/gps_adc_"+ip+test_num)
     for i in range(4,33):
         acquire = Search(i,IQ_input)
         find, snr_max, dop_freq, peak_shift = acquire.process()

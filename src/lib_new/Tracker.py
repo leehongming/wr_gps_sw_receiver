@@ -42,6 +42,7 @@ class Tracker(object):
         self.carrier_incr = 0
         self.carrier_incr_sum = 0
         self.carrier_incr_prev = 0
+        self.dll_error_meas = 0.0
         self.dll_error = 0.0
         self.pll_error = 0.0
         self.pll_error_prev = 0.0
@@ -49,17 +50,19 @@ class Tracker(object):
         self.mag_Early = 0.0
         self.mag_Late = 0.0
         self.init = 0
-        self.a=[]
         self.b=[]
         self.c=[]
 
     def process(self):
         # Get input code
-        input_td = numpy.array(self.IQ_input.read(self.num_samples))
-        
+        input_iq, input_time = self.IQ_input.read(self.num_samples)
+        input_td = numpy.array(input_iq)
+
+        carrier_phase_list = []
         mix_td = pyfftw.empty_aligned(self.num_samples, dtype='complex128')
         for i in range(self.num_samples):
             carrier_sin, carrier_cos = self.carrier_nco.getSinCos()
+            carrier_phase_list.append(self.carrier_nco.getPhase())
             carrier = complex(carrier_cos,carrier_sin)
             # mix the input signal with local carrier
             mix_td[i] = numpy.conj(carrier) * input_td[i]
@@ -100,13 +103,18 @@ class Tracker(object):
         Tracker.carrier_loop_filter(self)
         self.carrier_nco.ModifyPhaseIncr(self.carrier_incr)
         # self.carrier_nco.ModifyPhaseIncr(14000)
+        self.carrier_incr_sum += self.carrier_incr
+        self.dll_error_meas = 0.5 * (self.mag_Early - self.mag_Late) / (self.mag_Early + self.mag_Late)
 
-        Tracker.code_loop_filter(self)
-        if (self.dll_update == 0):
-            self.code_nco.ModifyPhaseIncr(round(self.code_incr))
-            self.dll_update+=1
+        if (self.dll_update >= 10):
+            Tracker.code_loop_filter(self)
+            self.code_nco.ModifyPhaseIncr(round(self.code_incr)+round(self.carrier_incr_sum/1540))
+            self.carrier_incr_sum=0
+            self.dll_update = 0
+            self.mag_Early = 0
+            self.mag_Late = 0
         else:
-            self.code_nco.ModifyPhaseIncr(round(self.code_incr))
+            self.dll_update += 1
 
 
         # if (self.dll_update == 0):
@@ -125,26 +133,23 @@ class Tracker(object):
         # if(abs(self.pll_error)>0.1):
         #     print(self.pll_error,self.carrier_incr)
         # self.a.append(mag_Prompt)
-        self.b.append(abs(sum_Prompt.imag))
-        self.a.append(abs(sum_Prompt.real)) 
+        # self.b.append(abs(sum_Prompt.imag))
+        # self.a.append(abs(sum_Prompt.real)) 
         
         
         # self.a.append(self.mag_Early)
         # self.b.append(mag_Prompt)
         # self.b.append(abs(sum_Late))
-        self.c.append(self.pll_error)
+        # self.c.append(self.pll_error)
         # self.c.append(self.dll_error)
         # self.c.append(mag_Prompt)
         # self.c.append(self.mag_Late)        
 
-        self.mag_Early = 0
-        self.mag_Late = 0
-
-        if abs(self.pll_error) < 0.25 and abs(self.dll_error) < 0.3:
-            return 1 if sum_Prompt.real>0 else -1
+        if abs(self.pll_error) < 0.2 and abs(self.dll_error_meas) < 0.5:
+            return (1 if sum_Prompt.real>0 else -1), self.pll_error, self.dll_error_meas, carrier_phase_list
         else:
-            # print("Unlock!\n")
-            return 0
+            print(self.dll_error_meas,self.pll_error)
+            return 0, self.pll_error, self.dll_error_meas, carrier_phase_list
 
     def carrier_loop_filter(self):
         # Two order low pass filter, BL= 15Hz, page 273
@@ -163,34 +168,52 @@ class Tracker(object):
         return
 
     def code_loop_filter(self):
-        wn = 1.89
-        K = 19043 * 0.8
-        self.code_incr = self.dll_error * wn * K
+        K = 30000
+        self.dll_error = 0.65*self.dll_error+0.35*self.dll_error_meas
+        self.code_incr=self.dll_error * K
         return 
 
 def main():
     fp_data = open("data.txt","w+")
     data=[]
-    IQ_input = InputIQ.InputIQ("../gps_adc.txt")
-    a = Tracker(3,5400,IQ_input)
-    a.IQ_input.read(6115)
+
+    # test3
+    IQ_input = InputIQ.InputIQ("../../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.2_test3") # test3
+    a = Tracker(5,7400,IQ_input) # test3
+    a.IQ_input.read(1181-3) # test3
     try:
         for i in range(20000):
-            bit = a.process()
+            bit = a.process("../data/192.168.0.2_test3") # test3
             data.append(bit)
-            print(i)
-            # fp_data.write(str(bit)+"\n")
+    # test5
+    # IQ_input = InputIQ.InputIQ("../../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.2_test4") # test4
+    # a = Tracker(5,7400,IQ_input) # test4
+    # a.IQ_input.read(7408) # test4
+    # try:
+    #     for i in range(20000):
+            # bit = a.process("../data/192.168.0.2_test4") # test4
+            # data.append(bit)
+
+    # # test5
+    # IQ_input = InputIQ.InputIQ("../../../cutewr_dp_gps/tools/gps_data/raw/gps_adc_192.168.0.2_test5")
+    # a = Tracker(5,7400,IQ_input)
+    # a.IQ_input.read(3990)
+    # try:
+    #     for i in range(20000):
+    #         bit = a.process("../data/192.168.0.2_test5")
+    #         data.append(bit)
+
     finally:
-        print(max(a.c[4:]),min(a.c[4:]))
-        fp_data.write(str(a.c))
+        print(max(a.c[30:]),min(a.c[30:]))
+        # fp_data.write(str(a.c))
         plt.subplot(3,1,1)
-        plt.plot(a.a)
+        plt.plot(a.a[30:])
         plt.subplot(3,1,2)
-        plt.plot(a.b)
+        plt.plot(a.b[30:])
         plt.subplot(3,1,3)
-        plt.plot(a.c)
+        plt.plot(a.c[30:])
         plt.figure()
-        plt.hist(a.c[4:])
+        plt.hist(a.c[30:])
         plt.show()
 
 if __name__ == '__main__':
